@@ -20,6 +20,10 @@ public class EchoOfTheFarlands
     {
         logger = event.getModLog();
         logger.info("{} preInit", NAME);
+
+        // Must happen in preInit: the coremod's noise hook reads these values, and world
+        // generation can begin as soon as a world loads.
+        Config.load(event.getSuggestedConfigurationFile());
     }
 
     @EventHandler

@@ -46,6 +46,10 @@ minecraft {
 
             // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
+
+            // Coremods are discovered from the jar manifest in production, which does not
+            // exist in a dev workspace -- this is the dev equivalent of FMLCorePlugin.
+            property 'fml.coreMods.load', 'com.chewylopez.echoofthefarlands.coremod.EOTFLLoadingPlugin'
         }
 
         server {
@@ -55,6 +59,8 @@ minecraft {
 
             // Recommended logging level for the console
             property 'forge.logging.console.level', 'debug'
+
+            property 'fml.coreMods.load', 'com.chewylopez.echoofthefarlands.coremod.EOTFLLoadingPlugin'
         }
     }
 }
@@ -85,6 +91,12 @@ dependencies {
 
 }
 
+// FG3 does not wire stdin into its run tasks, so runServer ignores console input --
+// including "stop". Needed to drive the dedicated server for headless worldgen testing.
+tasks.withType(JavaExec).configureEach {
+    standardInput = System.in
+}
+
 // mcmod.info carries ${version}/${mcversion} placeholders, so expand them on the way into the jar.
 processResources {
     inputs.property 'version', project.version
@@ -104,6 +116,11 @@ processResources {
 jar {
     manifest {
         attributes([
+            // How Forge 1.12.2 finds the coremod in a built jar. The second attribute is
+            // required because this jar also contains a normal @Mod; without it FML treats
+            // the file as a pure coremod and never loads the mod itself.
+            "FMLCorePlugin": "com.chewylopez.echoofthefarlands.coremod.EOTFLLoadingPlugin",
+            "FMLCorePluginContainsFMLMod": "true",
             "Specification-Title": "echoofthefarlands",
             "Specification-Vendor": "Chewylopez",
             "Specification-Version": "1", // We are version 1 of ourselves
